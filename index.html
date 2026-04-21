@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RF Hardware Characterisation — A Field Engineer's Course</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .hero { padding: 5rem 0 4rem; border-bottom: 1px solid var(--border); }
+  .hero-eyebrow { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.25em; color: var(--accent); margin-bottom: 1.5rem; display: block; opacity: 0.8; }
+  .hero h1 { font-family: var(--display); font-weight: 800; font-size: clamp(2.5rem, 5vw, 4rem); line-height: 1.05; margin-bottom: 1.5rem; color: var(--text); }
+  .hero h1 em { font-style: italic; color: var(--accent); }
+  .hero-lead { font-size: 1.1rem; color: var(--muted); font-weight: 300; line-height: 1.8; max-width: 600px; margin-bottom: 2.5rem; }
+  .hero-stats { display: flex; gap: 2.5rem; flex-wrap: wrap; padding-top: 2rem; border-top: 1px solid var(--border); }
+  .stat-num { font-family: var(--mono); font-size: 1.6rem; color: var(--accent); display: block; font-weight: 600; }
+  .stat-label { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .modules-section { padding: 4rem 0; }
+  .section-label { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.2em; color: var(--accent); margin-bottom: 2rem; display: block; opacity: 0.7; }
+  .modules-grid { display: flex; flex-direction: column; gap: 1px; }
+  .module-card { display: flex; align-items: flex-start; gap: 2rem; background: var(--bg2); border: 1px solid var(--border); padding: 1.75rem 2rem; text-decoration: none; color: inherit; transition: all 0.2s; position: relative; overflow: hidden; }
+  .module-card::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--accent); transform: scaleY(0); transform-origin: bottom; transition: transform 0.3s ease; }
+  .module-card:hover { background: var(--bg3); border-color: rgba(232,255,71,0.2); }
+  .module-card:hover::after { transform: scaleY(1); }
+  .module-num { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); min-width: 36px; padding-top: 0.15rem; flex-shrink: 0; }
+  .module-info { flex: 1; }
+  .module-title { font-family: var(--display); font-weight: 600; font-size: 1.05rem; color: var(--text); margin-bottom: 0.4rem; line-height: 1.2; }
+  .module-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.6; font-weight: 300; margin-bottom: 0.75rem; }
+  .module-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .module-tag-pill { font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.08em; color: var(--accent3); border: 1px solid rgba(61,224,255,0.2); padding: 0.15rem 0.5rem; }
+  .module-arrow { font-size: 1rem; color: var(--muted); align-self: center; transition: all 0.2s; flex-shrink: 0; }
+  .module-card:hover .module-arrow { color: var(--accent); transform: translateX(3px); }
+  .how-section { padding: 3rem 0 4rem; border-top: 1px solid var(--border); }
+  .how-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1px; margin-top: 1.5rem; }
+  .how-card { background: var(--bg2); border: 1px solid var(--border); padding: 1.5rem; }
+  .how-icon { font-size: 1.2rem; display: block; margin-bottom: 0.75rem; }
+  .how-title { font-family: var(--mono); font-size: 0.7rem; color: var(--text); margin-bottom: 0.5rem; letter-spacing: 0.05em; }
+  .how-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.6; font-weight: 300; }
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">RF<span>/course</span></a>
+  <div class="nav-links">
+    <a href="index.html" class="nav-link active">Home</a>
+    <a href="m1-foundations.html" class="nav-link">M1</a>
+    <a href="m2-rf-chain.html" class="nav-link">M2</a>
+    <a href="m3-instruments.html" class="nav-link">M3</a>
+    <a href="m4-wifi-signal.html" class="nav-link">M4</a>
+    <a href="m5-transmitter.html" class="nav-link">M5</a>
+    <a href="m6-receiver.html" class="nav-link">M6</a>
+    <a href="m7-diagnostics.html" class="nav-link">M7</a>
+    <a href="m8-calibration.html" class="nav-link">M8</a>
+    <a href="m9-full-flow.html" class="nav-link">M9</a>
+  </div>
+</nav>
+<div class="page">
+  <div class="container">
+    <section class="hero">
+      <span class="hero-eyebrow">// RF HARDWARE CHARACTERISATION — FIELD ENGINEER'S COURSE</span>
+      <h1>From <em>zero</em> to bench.<br>Wi-Fi chipset testing,<br>done properly.</h1>
+      <p class="hero-lead">A full narrative course for engineers entering RF hardware characterisation. Not a procedure list — a deep understanding of what's happening, so when something looks wrong on the analyser, you know exactly why.</p>
+      <div class="hero-stats">
+        <div class="stat-item"><span class="stat-num">9</span><span class="stat-label">Modules</span></div>
+        <div class="stat-item"><span class="stat-num">Wi-Fi</span><span class="stat-label">Focus Standard</span></div>
+        <div class="stat-item"><span class="stat-num">Tx + Rx</span><span class="stat-label">Full Characterisation</span></div>
+        <div class="stat-item"><span class="stat-num">Conducted</span><span class="stat-label">Lab Setup</span></div>
+      </div>
+    </section>
+    <section class="how-section">
+      <span class="section-label">// HOW THIS COURSE WORKS</span>
+      <div class="how-grid">
+        <div class="how-card"><span class="how-icon">📖</span><div class="how-title">THEORY FIRST</div><p class="how-desc">Every lesson starts with the physics. Not because it's academic — because without it you cannot diagnose failures.</p></div>
+        <div class="how-card"><span class="how-icon">🔬</span><div class="how-title">BENCH REALITY</div><p class="how-desc">Then we go to the instrument. What you should see, what you actually see, and why they differ.</p></div>
+        <div class="how-card"><span class="how-icon">⚠️</span><div class="how-title">GOTCHAS</div><p class="how-desc">Every lesson has a "don't be fooled" section — instrument artefacts, calibration errors, and common traps.</p></div>
+        <div class="how-card"><span class="how-icon">🎯</span><div class="how-title">DIAGNOSE</div><p class="how-desc">End of each module: given a symptom, trace it to root cause. This is the skill that separates engineers from technicians.</p></div>
+      </div>
+    </section>
+    <section class="modules-section">
+      <span class="section-label">// COURSE MODULES — WORK THROUGH IN ORDER</span>
+      <div class="modules-grid">
+        <a href="m1-foundations.html" class="module-card">
+          <span class="module-num">01</span>
+          <div class="module-info">
+            <div class="module-title">Foundations — Signals, dB & the RF World</div>
+            <p class="module-desc">Sine waves, frequency domain, power in dBm, logarithmic thinking. Your first spectrum analyser screen explained from first principles.</p>
+            <div class="module-tags"><span class="module-tag-pill">SIGNALS</span><span class="module-tag-pill">dBm</span><span class="module-tag-pill">SPECTRUM</span><span class="module-tag-pill">NOISE FLOOR</span></div>
+          </div>
+          <span class="module-arrow">→</span>
+        </a>
+        <a href="m2-rf-chain.html" class="module-card">
+          <span class="module-num">02</span>
+          <div class="module-info">
+            <div class="module-title">Inside the Wi-Fi Chip — The RF Chain</div>
+            <p class="module-desc">Crystal → PLL → Mixer → PA/LNA → PGA → DAC/ADC. Every block, what it does to the signal, and which block causes which failure symptom.</p>
+            <div class="module-tags"><span class="module-tag-pill">PLL</span><span class="module-tag-pill">MIXER</span><span class="module-tag-pill">PA / LNA</span><span class="module-tag-pill">DAC / ADC</span></div>
+          </div>
+          <span class="module-arrow">→</span>
+        </a>
+        <a href="m3-instruments.html" class="module-card">
+          <span class="module-num">03</span>
+          <div class="module-info">
+            <div class="module-title">Your Instruments — Honestly</div>
+            <p class="module-desc">Spectrum analyser, signal generator, VNA — enough internal architecture to never be fooled. LO leakage, image responses, RBW/VBW effects, calibration types.</p>
+            <div class="module-tags"><span class="module-tag-pill">SPECTRUM ANALYSER</span><span class="module-tag-pill">VNA</span><span class="module-tag-pill">SIGNAL GEN</span><span class="module-tag-pill">CAL</span></div>
+          </div>
+          <span class="module-arrow">→</span>
+        </a>
+        <a href="m4-wifi-signal.html" class="module-card">
+          <span class="module-num">04</span>
+          <div class="module-info">
+            <div class="module-title">The Wi-Fi Signal — What It's Supposed to Look Like</div>
+            <p class="module-desc">OFDM from a hardware view. 802.11a/g/n/ac/ax/be. EVM, spectral mask, PAPR, MCS tables. What the spec demands from your chipset.</p>
+            <div class="module-tags"><span class="module-tag-pill">OFDM</span><span class="module-tag-pill">EVM</span><span class="module-tag-pill">802.11ax</span><span class="module-tag-pill">SPECTRAL MASK</span></div>
+          </div>
+          <span class="module-arrow">→</span>
+        </a>
+        <a href="m5-transmitter.html" class="module-card">
+          <span class="module-num">05</span>
+          <div class="module-info">
+            <div class="module-title">Transmitter Characterisation</div>
+            <p class="module-desc">Output power, EVM, spectral mask, harmonics & spurious. Root cause: phase noise vs compression vs IQ imbalance — how to tell them apart on the bench.</p>
+            <div class="module-tags"><span class="module-tag-pill">EVM</span><span class="module-tag-pill">OUTPUT POWER</span><span class="module-tag-pill">HARMONICS</span><span class="module-tag-pill">IQ IMBALANCE</span></div>
+          </div>
+          <span class="module-arrow">→</span>
+        </a>
+        <a href="m6-receiver.html" class="module-card">
+          <span class="module-num">06</span>
+          <div class="module-info">
+            <div class="module-title">Receiver Characterisation</div>
+            <p class="module-desc">Sensitivity, PER, RSSI, blocking, selectivity, image rejection. Root cause: NF vs LNA compression vs image vs interference — tracing bad sensitivity to source.</p>
+            <div class="module-tags"><span class="module-tag-pill">SENSITIVITY</span><span class="module-tag-pill">PER</span><span class="module-tag-pill">BLOCKING</span><span class="module-tag-pill">IMAGE REJECTION</span></div>
+          </div>
+          <span class="module-arrow">→</span>
+        </a>
+        <a href="m7-diagnostics.html" class="module-card">
+          <span class="module-num">07</span>
+          <div class="module-info">
+            <div class="module-title">Phase Noise, Spurs & Interference — The Diagnostic Chapter</div>
+            <p class="module-desc">The chapter that separates engineers from technicians. Visual field guide to phase noise vs spurs vs broadband noise vs interference on a spectrum analyser.</p>
+            <div class="module-tags"><span class="module-tag-pill">PHASE NOISE</span><span class="module-tag-pill">SPURS</span><span class="module-tag-pill">INTERFERENCE</span><span class="module-tag-pill">ROOT CAUSE</span></div>
+          </div>
+          <span class="module-arrow">→</span>
+        </a>
+        <a href="m8-calibration.html" class="module-card">
+          <span class="module-num">08</span>
+          <div class="module-info">
+            <div class="module-title">Calibration, Uncertainty & Fixturing</div>
+            <p class="module-desc">Cable de-embedding, power meter cal, VNA SOLT/TRL, measurement uncertainty budgets, temperature effects. Why your reading and the datasheet don't match.</p>
+            <div class="module-tags"><span class="module-tag-pill">DE-EMBEDDING</span><span class="module-tag-pill">SOLT / TRL</span><span class="module-tag-pill">UNCERTAINTY</span><span class="module-tag-pill">FIXTURING</span></div>
+          </div>
+          <span class="module-arrow">→</span>
+        </a>
+        <a href="m9-full-flow.html" class="module-card">
+          <span class="module-num">09</span>
+          <div class="module-info">
+            <div class="module-title">Full Characterisation Flow — Wi-Fi Chipset</div>
+            <p class="module-desc">First power-up to final report. Complete real-world Tx+Rx characterisation flow, failure triage, root cause diagnosis, and writing the characterisation summary.</p>
+            <div class="module-tags"><span class="module-tag-pill">FULL FLOW</span><span class="module-tag-pill">TRIAGE</span><span class="module-tag-pill">REPORT</span><span class="module-tag-pill">REAL WORLD</span></div>
+          </div>
+          <span class="module-arrow">→</span>
+        </a>
+      </div>
+    </section>
+  </div>
+</div>
+<footer>
+  <span class="footer-brand">RF/COURSE</span>
+  <span class="footer-note">// Wi-Fi Chipset Characterisation · Start at Module 01</span>
+</footer>
+</body>
+</html>

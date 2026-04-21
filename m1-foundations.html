@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 1 — Foundations | RF Course</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">RF<span>/course</span></a>
+  <div class="nav-links">
+    <a href="index.html" class="nav-back">← Home</a>
+    <a href="m2-rf-chain.html" class="nav-link">Next: Module 2 →</a>
+  </div>
+</nav>
+<div class="progress-strip"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+<div class="page">
+  <div class="container">
+    <div class="module-hero">
+      <span class="module-tag">// MODULE 01 — FOUNDATIONS</span>
+      <h1>Signals, <em>dB</em>,<br>and the RF World</h1>
+      <p class="lead">Before you touch an instrument, you need to think like an RF engineer. That means understanding why we measure power in logarithms, what a spectrum really shows, and what the noise floor actually means. Everything else in this course builds on these ideas.</p>
+      <div class="module-meta">
+        <span class="module-meta-item">LESSONS <span>5</span></span>
+        <span class="module-meta-item">TOPICS <span>Signals · dBm · Spectrum · Noise · Impedance</span></span>
+      </div>
+    </div>
+
+    <div class="lesson-nav" id="lesson-nav">
+      <button class="lesson-tab active" onclick="show('l1',this)">1. Signals & Spectrum</button>
+      <button class="lesson-tab" onclick="show('l2',this)">2. Power & dBm</button>
+      <button class="lesson-tab" onclick="show('l3',this)">3. Noise Floor</button>
+      <button class="lesson-tab" onclick="show('l4',this)">4. Impedance & 50Ω</button>
+      <button class="lesson-tab" onclick="show('l5',this)">5. Quiz</button>
+    </div>
+
+    <div class="lesson-panel active" id="l1">
+      <div class="prose">
+        <h2>What is a signal, really?</h2>
+        <p>At its most fundamental level, an RF signal is a voltage or current that <strong>oscillates in time</strong> at a particular rate — the frequency, measured in Hertz. A Wi-Fi signal at 2.4 GHz is oscillating 2,400,000,000 times every second. The simplest possible signal is a <strong>pure sine wave</strong> — a single frequency, constant forever. The moment you modulate it (put data onto it), you spread energy across a range of frequencies. That range is the <strong>bandwidth</strong>.</p>
+        <h3>Time domain vs frequency domain</h3>
+        <p>Your oscilloscope shows the <strong>time domain</strong>: voltage vs time. A spectrum analyser shows the <strong>frequency domain</strong>: power vs frequency. The same signal, viewed differently. When you look at a Wi-Fi transmission on a spectrum analyser, you see a hump — the width of the hump is the channel bandwidth (20/40/80/160 MHz). The height is power. The shape tells you about modulation quality.</p>
+        <div class="callout callout-bench">
+          <span class="callout-label callout-label-bench">// BENCH INSIGHT</span>
+          <p>Almost every RF measurement is in the frequency domain. RF problems — interference, harmonics, phase noise, spurs — all show up as unexpected energy at unexpected frequencies. A PA generating a second harmonic at 2×f appears as a clear spike on the spectrum analyser. You'd never see it on an oscilloscope.</p>
+        </div>
+        <h3>The concept of a tone</h3>
+        <p>A <strong>tone</strong> is a single-frequency sinusoidal signal — a pure spike on the spectrum analyser. Most characterisation work starts with a single tone stimulus because it lets you isolate specific behaviour (gain, linearity, noise) before adding the complexity of full OFDM modulation.</p>
+      </div>
+      <div class="takeaways">
+        <h4>// LESSON 1 TAKEAWAYS</h4>
+        <ul>
+          <li>An RF signal oscillates at a frequency — 2.4 GHz = 2.4 billion cycles per second.</li>
+          <li>Spectrum analyser shows power vs frequency — your primary diagnostic tool.</li>
+          <li>Bandwidth = how much frequency space a signal occupies, set by its modulation.</li>
+          <li>A tone = single-frequency test signal — the starting point for most characterisation.</li>
+          <li>Problems like harmonics and spurs are only visible in the frequency domain.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="lesson-panel" id="l2">
+      <div class="prose">
+        <h2>Why RF engineers think in logarithms</h2>
+        <p>The range of power levels in RF work is enormous. A Wi-Fi transmitter outputs around +20 dBm. A receiver detects signals as weak as −90 dBm. That's a ratio of 10,000,000,000 to 1. Logarithms compress this into a manageable scale. That is the entire motivation.</p>
+        <div class="formula"><span class="formula-label">Power Ratio in dB</span>Gain (dB) = 10 · log₁₀(P_out / P_in)</div>
+        <table class="data-table">
+          <thead><tr><th>Linear Ratio</th><th>dB</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td>2×</td><td class="mono">+3 dB</td><td>Double the power</td></tr>
+            <tr><td>0.5×</td><td class="mono">−3 dB</td><td>Half the power</td></tr>
+            <tr><td>10×</td><td class="mono">+10 dB</td><td>Ten times</td></tr>
+            <tr><td>100×</td><td class="mono">+20 dB</td><td>Hundred times</td></tr>
+            <tr><td>1,000,000×</td><td class="mono">+60 dB</td><td>One million times</td></tr>
+          </tbody>
+        </table>
+        <h3>dBm — absolute power</h3>
+        <p><strong>dBm</strong> = decibels relative to 1 milliwatt. <strong>0 dBm = 1 mW</strong>. This is your anchor. +20 dBm = 100 mW (typical Wi-Fi Tx power). −90 dBm = 1 picowatt (typical Rx sensitivity). Through a signal chain, just add gains and subtract losses in dB.</p>
+        <div class="formula"><span class="formula-label">Chain Calculation</span>P_out (dBm) = P_in (dBm) + G₁ − L_cable + G₂ − L_filter ...</div>
+        <div class="callout callout-warn">
+          <span class="callout-label callout-label-warn">// PROTECT YOUR INSTRUMENTS</span>
+          <p>Most spectrum analysers have a max input of <strong>+30 dBm</strong>. Always calculate the maximum possible power at your instrument before connecting. Use an external attenuator when unsure. A destroyed input mixer is expensive and embarrassing.</p>
+        </div>
+        <p><strong>dBc</strong> = decibels relative to the carrier. Used for spurs, phase noise, harmonics. If carrier is +20 dBm and a spur is −30 dBm, the spur is −50 dBc.</p>
+      </div>
+      <div class="takeaways">
+        <h4>// LESSON 2 TAKEAWAYS</h4>
+        <ul>
+          <li>dB is a ratio. dBm is absolute power relative to 1 mW.</li>
+          <li>0 dBm = 1 mW. +10 dB = 10×. +3 dB = 2×. Memorise these.</li>
+          <li>Through a chain: add gains, subtract losses — all in dB.</li>
+          <li>dBc = relative to carrier. Used for spurs, phase noise, harmonics.</li>
+          <li>Never connect high-power signals to instruments without checking max input rating.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="lesson-panel" id="l3">
+      <div class="prose">
+        <h2>Noise — the invisible floor</h2>
+        <p>Every RF measurement has a fundamental limit: <strong>thermal noise</strong>, generated by the random motion of electrons in any resistive material at any temperature above absolute zero. You cannot eliminate it — only understand and work around it.</p>
+        <div class="formula"><span class="formula-label">Thermal Noise Floor at 290K</span>N₀ = kT = −174 dBm/Hz</div>
+        <p>This is one of the most important numbers in RF engineering. No signal can be detected below it regardless of how good your receiver is. Every 10× increase in bandwidth raises the noise floor by 10 dB:</p>
+        <div class="formula"><span class="formula-label">Noise in Bandwidth B</span>N (dBm) = −174 + 10·log₁₀(B in Hz)</div>
+        <table class="data-table">
+          <thead><tr><th>Bandwidth</th><th>Noise Floor</th><th>Relevance</th></tr></thead>
+          <tbody>
+            <tr><td>1 MHz</td><td class="mono">−114 dBm</td><td>Common SA reference</td></tr>
+            <tr><td>20 MHz</td><td class="mono">−101 dBm</td><td>Wi-Fi 802.11g/n channel</td></tr>
+            <tr><td>80 MHz</td><td class="mono">−95 dBm</td><td>Wi-Fi 802.11ac/ax channel</td></tr>
+            <tr><td>160 MHz</td><td class="mono">−92 dBm</td><td>Wide channel 802.11ac/ax</td></tr>
+          </tbody>
+        </table>
+        <h3>Noise Figure and receiver sensitivity</h3>
+        <p>Every real component adds noise beyond the thermal floor. <strong>Noise Figure (NF)</strong> quantifies this. An ideal device has NF = 0 dB. A good LNA: ~1.5 dB. A passive 10 dB attenuator: NF = 10 dB.</p>
+        <div class="formula"><span class="formula-label">Receiver Sensitivity</span>Sensitivity (dBm) = −174 + 10·log₁₀(B) + NF + SNR_min</div>
+        <div class="callout callout-bench">
+          <span class="callout-label callout-label-bench">// ON THE BENCH</span>
+          <p>The RBW (Resolution Bandwidth) setting on your spectrum analyser controls the noise bandwidth. Narrow RBW lowers the displayed noise floor but slows the sweep. You're not improving the physics — just narrowing the measurement window. Always match RBW to what you're measuring.</p>
+        </div>
+      </div>
+      <div class="takeaways">
+        <h4>// LESSON 3 TAKEAWAYS</h4>
+        <ul>
+          <li>Thermal noise = −174 dBm/Hz at 290K. Fundamental, unavoidable.</li>
+          <li>Every 10× bandwidth increase raises noise floor 10 dB.</li>
+          <li>Noise Figure = how much extra noise a component adds beyond thermal floor.</li>
+          <li>Receiver sensitivity = thermal floor + NF + minimum SNR required.</li>
+          <li>RBW narrows the measurement window — it doesn't improve the underlying noise.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="lesson-panel" id="l4">
+      <div class="prose">
+        <h2>Impedance — the invisible handshake</h2>
+        <p>Impedance mismatch causes power to reflect back toward the source. Reflected power means less delivered power, distorted waveforms, and potentially damaged transmitters. The entire RF ecosystem is standardised around <strong>50 Ω</strong> to prevent this. Every instrument, connector, cable, and PCB trace you'll use is designed for 50 Ω.</p>
+        <div class="formula"><span class="formula-label">Reflection Coefficient</span>Γ = (Z_L − Z₀) / (Z_L + Z₀)</div>
+        <div class="formula"><span class="formula-label">Return Loss</span>RL (dB) = −20 · log₁₀|Γ|</div>
+        <p>S11 on the VNA shows return loss. S11 better than −10 dB means less than 10% of power reflects. Better than −20 dB (1% reflected) is excellent. For well-designed Wi-Fi chipset RF ports: target better than −10 dB across the operating band.</p>
+        <div class="callout callout-bench">
+          <span class="callout-label callout-label-bench">// 50Ω DISCIPLINE ON THE BENCH</span>
+          <p>Always terminate unused ports with 50 Ω loads. An open port is a perfect reflector and will cause standing waves corrupting every measurement. Use a torque wrench on SMA connectors (0.9 Nm). Inspect connector faces regularly — a damaged pin centre conductor introduces impedance discontinuity and measurement errors at GHz frequencies.</p>
+        </div>
+        <div class="callout callout-warn">
+          <span class="callout-label callout-label-warn">// VNA + ACTIVE DEVICE GOTCHA</span>
+          <p>Before measuring S11 on an active device, verify the DUT is not transmitting. Transmit power entering your VNA receiver will damage it immediately. Always check DUT state before connecting a VNA.</p>
+        </div>
+      </div>
+      <div class="takeaways">
+        <h4>// LESSON 4 TAKEAWAYS</h4>
+        <ul>
+          <li>50 Ω is the universal RF standard — all test equipment assumes it.</li>
+          <li>Impedance mismatch causes reflections — reflected power corrupts measurements.</li>
+          <li>S11 = return loss — how well a port matches 50 Ω. Target better than −10 dB.</li>
+          <li>Always terminate unused ports. Never leave RF ports open.</li>
+          <li>Torque wrench on SMA connectors. Inspect faces regularly.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="lesson-panel" id="l5">
+      <div class="prose">
+        <h2>Module 1 Quiz</h2>
+        <p>Work through each question before revealing the answer. The reasoning matters more than the number.</p>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q"><span class="qnum">Q1.</span> Signal generator: +10 dBm → 2 dB cable loss → 20 dB amplifier → 3 dB cable loss → spectrum analyser. What power reaches the SA, and is it safe?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="ans(this,false)">A. +35 dBm — not safe at all</button>
+          <button class="quiz-opt" onclick="ans(this,true)">B. +25 dBm — safe, but add a 10 dB attenuator for margin</button>
+          <button class="quiz-opt" onclick="ans(this,false)">C. +15 dBm — completely safe</button>
+          <button class="quiz-opt" onclick="ans(this,false)">D. +20 dBm — fine without attenuation</button>
+        </div>
+        <div class="quiz-exp"><strong>+10 − 2 + 20 − 3 = +25 dBm.</strong> Most SAs accept up to +30 dBm. +25 dBm is only 5 dB of margin. If amplifier gain is slightly higher than expected you could destroy the input mixer. On the bench, always add a 10–20 dB pad before the SA when working with amplified signals.</div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q"><span class="qnum">Q2.</span> Wi-Fi receiver: NF = 6 dB, BW = 20 MHz, SNR_min = 10 dB. What is the theoretical sensitivity?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="ans(this,false)">A. −174 dBm</button>
+          <button class="quiz-opt" onclick="ans(this,true)">B. −85 dBm</button>
+          <button class="quiz-opt" onclick="ans(this,false)">C. −95 dBm</button>
+          <button class="quiz-opt" onclick="ans(this,false)">D. −75 dBm</button>
+        </div>
+        <div class="quiz-exp"><strong>−174 + 10·log(20M) + 6 + 10 = −174 + 73 + 16 = −85 dBm.</strong> Each term: −174 = thermal floor per Hz. +73 = noise in 20 MHz BW. +6 = added noise from chipset (NF). +10 = minimum SNR for demodulation. Real 802.11g BPSK specs are typically −82 to −86 dBm — exactly matching this formula.</div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q"><span class="qnum">Q3.</span> You see a spike on the SA at exactly 2× your DUT's transmit frequency. What is this most likely?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="ans(this,false)">A. Phase noise from the PLL</button>
+          <button class="quiz-opt" onclick="ans(this,true)">B. Second harmonic from PA nonlinearity</button>
+          <button class="quiz-opt" onclick="ans(this,false)">C. Image frequency from the mixer</button>
+          <button class="quiz-opt" onclick="ans(this,false)">D. Instrument artefact</button>
+        </div>
+        <div class="quiz-exp"><strong>Second harmonic.</strong> A nonlinear PA generates energy at 2f, 3f, 4f... Phase noise is a skirt around the carrier, not a discrete spike. Image frequencies appear at a different relationship to the carrier. This is why harmonics testing is a regulatory requirement — your transmitter must not pollute other bands.</div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q"><span class="qnum">Q4.</span> You narrow RBW from 100 kHz to 1 kHz on the SA. The displayed noise floor drops 20 dB. Does this mean your measurement is more accurate?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="ans(this,false)">A. Yes — lower noise floor always means better measurement</button>
+          <button class="quiz-opt" onclick="ans(this,true)">B. Depends — better for tones/spurs, not better for broadband OFDM signals</button>
+          <button class="quiz-opt" onclick="ans(this,false)">C. No — RBW has no effect on measurement accuracy</button>
+          <button class="quiz-opt" onclick="ans(this,false)">D. No — noise floor rises with narrower RBW</button>
+        </div>
+        <div class="quiz-exp"><strong>It depends on what you're measuring.</strong> For a narrow tone or spur, narrower RBW gives better sensitivity — the signal is fully contained in one RBW bin. For a broadband OFDM signal, narrow RBW shows only a slice of the signal's power — the signal appears weaker too. You're changing the window, not the underlying physics. Always match RBW to the signal being measured.</div>
+      </div>
+      <div style="margin-top:2rem;">
+        <a href="m2-rf-chain.html" style="font-family:var(--mono);font-size:0.72rem;color:var(--accent);border:1px solid var(--border);padding:0.7rem 1.5rem;text-decoration:none;">Continue to Module 2 →</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+<footer>
+  <span class="footer-brand">RF/COURSE</span>
+  <span class="footer-note">// Module 01 — Foundations</span>
+</footer>
+<script>
+function show(id,btn){
+  document.querySelectorAll('.lesson-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.lesson-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  const pct={'l1':20,'l2':40,'l3':60,'l4':80,'l5':100}[id]||0;
+  document.getElementById('progress').style.width=pct+'%';
+  window.scrollTo({top:document.getElementById('lesson-nav').offsetTop-60,behavior:'smooth'});
+}
+function ans(btn,correct){
+  const card=btn.closest('.quiz-card');
+  if(card.dataset.done)return;
+  card.dataset.done='1';
+  card.querySelectorAll('.quiz-opt').forEach(o=>o.disabled=true);
+  if(correct)btn.classList.add('correct');
+  else{btn.classList.add('wrong');card.querySelectorAll('.quiz-opt').forEach(o=>{if(o.onclick.toString().includes('true'))o.classList.add('correct');});}
+  card.querySelector('.quiz-exp').classList.add('show');
+}
+</script>
+</body>
+</html>

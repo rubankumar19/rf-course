@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 2 — Inside the Wi-Fi Chip | RF Course</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">RF<span>/course</span></a>
+  <div class="nav-links">
+    <a href="m1-foundations.html" class="nav-back">← Module 1</a>
+    <a href="m3-instruments.html" class="nav-link">Next: Module 3 →</a>
+  </div>
+</nav>
+
+<div class="progress-strip"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+
+<div class="page">
+  <div class="container">
+
+    <div class="module-hero">
+      <span class="module-tag">// MODULE 02 — THE RF CHAIN</span>
+      <h1>Inside the<br><em>Wi-Fi Chip</em></h1>
+      <p class="lead">Before you can diagnose a failure, you need a mental map of what's physically inside the chipset and what each block does to the signal. This is that map. By the end of this module, when you see a bad EVM reading, you'll have a structured way to reason about which block might be responsible.</p>
+      <div class="module-meta">
+        <span class="module-meta-item">LESSONS <span>5</span></span>
+        <span class="module-meta-item">BLOCKS <span>Crystal · PLL · Mixer · PA/LNA · PGA · DAC/ADC</span></span>
+      </div>
+    </div>
+
+    <div class="lesson-nav" id="lesson-nav">
+      <button class="lesson-tab active" onclick="show('l1',this)">1. The Big Picture</button>
+      <button class="lesson-tab" onclick="show('l2',this)">2. Crystal & PLL</button>
+      <button class="lesson-tab" onclick="show('l3',this)">3. Mixer & IQ</button>
+      <button class="lesson-tab" onclick="show('l4',this)">4. PA, LNA & PGA</button>
+      <button class="lesson-tab" onclick="show('l5',this)">5. DAC, ADC & Quiz</button>
+    </div>
+
+    <!-- LESSON 1 — BIG PICTURE -->
+    <div class="lesson-panel active" id="l1">
+      <div class="prose">
+        <h2>The signal's journey through the chip</h2>
+        <p>A Wi-Fi chipset performs two jobs simultaneously: it transmits data by converting digital bits into an RF signal, and it receives by doing the reverse. These two paths — Tx and Rx — share some hardware (like the antenna) and are separate in others (PA vs LNA, DAC vs ADC). Understanding both paths is essential because failures in one can affect the other.</p>
+
+        <h3>The Transmit Path — top to bottom</h3>
+        <p>Your digital data (the bits you want to transmit) starts in the digital baseband. It's modulated into OFDM symbols, shaped, and fed to the <strong>DAC</strong> (Digital-to-Analogue Converter), which converts it to an analogue baseband waveform — two signals, called I and Q. These are then <strong>upconverted</strong> by the mixer from baseband to 2.4 or 5 GHz RF. The <strong>PGA</strong> (Programmable Gain Amplifier) sets the power level. The <strong>PA</strong> (Power Amplifier) boosts it to the required transmit power. Then it goes to the antenna.</p>
+
+        <h3>The Receive Path — bottom to top</h3>
+        <p>An incoming RF signal arrives at the antenna. The <strong>LNA</strong> (Low Noise Amplifier) amplifies it while adding as little noise as possible. The <strong>PGA</strong> on the Rx side adjusts gain based on signal strength. The <strong>mixer</strong> downconverts from RF to baseband IQ. The <strong>ADC</strong> converts the analogue IQ to digital samples. The digital baseband demodulates and decodes back to bits.</p>
+
+        <h3>The clock backbone — Crystal and PLL</h3>
+        <p>Sitting behind everything is the <strong>frequency reference</strong>. A crystal oscillator generates a precise, stable low-frequency reference (typically 40 MHz or 26 MHz). The <strong>PLL</strong> (Phase-Locked Loop) multiplies this up to the operating frequency — 2.4 GHz or 5 GHz. The PLL's output drives the mixer's local oscillator (LO) port. If the crystal or PLL is unstable or noisy, <em>every</em> other measurement is affected, because everything is clocked from this reference.</p>
+      </div>
+
+      <!-- SIGNAL CHAIN DIAGRAM -->
+      <div style="margin: 2rem 0;">
+        <div style="font-family: var(--mono); font-size: 0.6rem; color: var(--accent); letter-spacing: 0.15em; margin-bottom: 0.75rem;">// TX PATH</div>
+        <div class="chain">
+          <div class="chain-block"><span class="chain-block-name">DIGITAL BB</span><span class="chain-block-desc">Bits → OFDM</span></div>
+          <span class="chain-arrow">→</span>
+          <div class="chain-block"><span class="chain-block-name">DAC</span><span class="chain-block-desc">Digital→Analogue IQ</span></div>
+          <span class="chain-arrow">→</span>
+          <div class="chain-block highlight"><span class="chain-block-name">MIXER (UP)</span><span class="chain-block-desc">IQ → RF</span></div>
+          <span class="chain-arrow">→</span>
+          <div class="chain-block"><span class="chain-block-name">PGA</span><span class="chain-block-desc">Power level</span></div>
+          <span class="chain-arrow">→</span>
+          <div class="chain-block highlight"><span class="chain-block-name">PA</span><span class="chain-block-desc">Boost to Tx power</span></div>
+          <span class="chain-arrow">→</span>
+          <div class="chain-block"><span class="chain-block-name">ANT SW</span><span class="chain-block-desc">Tx/Rx switch</span></div>
+          <span class="chain-arrow">→</span>
+          <div class="chain-block"><span class="chain-block-name">ANTENNA</span><span class="chain-block-desc">RF port</span></div>
+        </div>
+        <div style="font-family: var(--mono); font-size: 0.6rem; color: var(--accent3); letter-spacing: 0.15em; margin: 1.5rem 0 0.75rem;">// RX PATH</div>
+        <div class="chain">
+          <div class="chain-block"><span class="chain-block-name">ANTENNA</span><span class="chain-block-desc">RF port</span></div>
+          <span class="chain-arrow">→</span>
+          <div class="chain-block"><span class="chain-block-name">ANT SW</span><span class="chain-block-desc">Tx/Rx switch</span></div>
+          <span class="chain-arrow">→</span>
+          <div class="chain-block highlight"><span class="chain-block-name">LNA</span><span class="chain-block-desc">Low-noise amp</span></div>
+          <span class="chain-arrow">→</span>
+          <div class="chain-block"><span class="chain-block-name">PGA</span><span class="chain-block-desc">AGC gain</span></div>
+          <span class="chain-arrow">→</span>
+          <div class="chain-block highlight"><span class="chain-block-name">MIXER (DN)</span><span class="chain-block-desc">RF → IQ BB</span></div>
+          <span class="chain-arrow">→</span>
+          <div class="chain-block"><span class="chain-block-name">ADC</span><span class="chain-block-desc">Analogue→Digital IQ</span></div>
+          <span class="chain-arrow">→</span>
+          <div class="chain-block"><span class="chain-block-name">DIGITAL BB</span><span class="chain-block-desc">Demod → Bits</span></div>
+        </div>
+        <div style="font-family: var(--mono); font-size: 0.6rem; color: var(--accent4); letter-spacing: 0.15em; margin: 1.5rem 0 0.75rem;">// CLOCK BACKBONE (drives both paths)</div>
+        <div class="chain">
+          <div class="chain-block highlight"><span class="chain-block-name">XTAL</span><span class="chain-block-desc">~40 MHz ref</span></div>
+          <span class="chain-arrow">→</span>
+          <div class="chain-block highlight"><span class="chain-block-name">PLL</span><span class="chain-block-desc">×60 → 2.4 GHz</span></div>
+          <span class="chain-arrow">→</span>
+          <div class="chain-block"><span class="chain-block-name">LO DIST</span><span class="chain-block-desc">To Tx+Rx mixers</span></div>
+        </div>
+      </div>
+
+      <div class="takeaways">
+        <h4>// LESSON 1 TAKEAWAYS</h4>
+        <ul>
+          <li>Tx path: Digital BB → DAC → Mixer (up) → PGA → PA → Antenna.</li>
+          <li>Rx path: Antenna → LNA → PGA → Mixer (down) → ADC → Digital BB.</li>
+          <li>Crystal and PLL form the clock backbone — upstream of everything.</li>
+          <li>A failure anywhere in the chain produces a characteristic symptom at the output.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- LESSON 2 — CRYSTAL & PLL -->
+    <div class="lesson-panel" id="l2">
+      <div class="prose">
+        <h2>Crystal Oscillator — the heartbeat of the system</h2>
+        <p>Every frequency in the Wi-Fi chipset is derived from one source: the <strong>crystal oscillator</strong>. It's typically a 40 MHz TCXO (Temperature Compensated Crystal Oscillator) or VCTCXO (Voltage Controlled TCXO). Its job is to produce a stable, low-noise sine wave at a fixed reference frequency.</p>
+
+        <p>The word "stable" has a specific meaning here. An ideal oscillator would output exactly 40.000000 MHz forever, at all temperatures. A real crystal oscillator has <strong>frequency accuracy</strong> (how close to 40 MHz it is — measured in ppm, parts per million) and <strong>frequency stability</strong> (how much it drifts with temperature, time, and power supply variation).</p>
+
+        <div class="callout">
+          <span class="callout-label callout-label-theory">// WHY THIS MATTERS FOR Wi-Fi</span>
+          <p>Wi-Fi standards allow only a small carrier frequency tolerance — typically <strong>±20 ppm</strong> for 802.11. At 5 GHz, 20 ppm = 100 kHz of carrier offset. If your crystal is worse than spec, your transmitter transmits on a slightly wrong frequency. More critically, the receiver's LO is also derived from the same crystal — so frequency error at the LO means the demodulator is misaligned with the incoming signal. This directly degrades EVM and sensitivity.</p>
+        </div>
+
+        <p>When you're characterising a chipset and frequency accuracy looks bad, the crystal is the first place to look — not the PLL, not the baseband.</p>
+
+        <h2>The PLL — frequency multiplication engine</h2>
+        <p>40 MHz is nowhere near the 2.4 GHz or 5 GHz needed for Wi-Fi. The <strong>Phase-Locked Loop</strong> multiplies the crystal reference up to the operating frequency. A typical PLL for 2.4 GHz Wi-Fi: 40 MHz × 60 = 2.4 GHz.</p>
+
+        <p>The PLL architecture contains: a <strong>phase-frequency detector</strong> (PFD), a <strong>charge pump</strong>, a <strong>loop filter</strong>, a <strong>VCO</strong> (Voltage-Controlled Oscillator), and a <strong>frequency divider</strong> (÷N). The VCO output is divided down and compared to the crystal reference. The difference drives a correction voltage back to the VCO. This feedback loop locks the VCO to exactly N times the reference.</p>
+
+        <h3>Why the PLL is your #1 phase noise suspect</h3>
+        <p>The PLL multiplication process also multiplies noise. Noise on the crystal reference gets multiplied by N² in power terms — so a 60× multiplication multiplies phase noise by 20·log(60) = 35.6 dB. Even a clean 40 MHz crystal will contribute significant phase noise at 2.4 GHz after this multiplication.</p>
+
+        <p>On top of this, the VCO itself generates phase noise. The loop filter bandwidth determines whether PLL noise or VCO noise dominates at a given offset frequency. Inside the loop bandwidth, reference and PLL noise dominates. Outside the loop bandwidth, VCO noise dominates. This creates the characteristic "PLL noise hump" shape you'll see on a spectrum analyser.</p>
+
+        <div class="callout callout-bench">
+          <span class="callout-label callout-label-bench">// ON THE BENCH — WHAT PLL PHASE NOISE LOOKS LIKE</span>
+          <p>When you transmit a CW (continuous wave, single tone) from the DUT and look at it on a spectrum analyser with a narrow RBW, you'll see the carrier spike with "skirts" falling away on both sides. Those skirts are phase noise. The shape — how steep they fall and whether there's a bump at a specific offset — tells you a lot about the PLL design. A bump in the skirt at, say, 100 kHz offset indicates the PLL loop bandwidth and the noise peaking at that frequency. In Module 7 we'll learn exactly how to read and diagnose this.</p>
+        </div>
+
+        <h3>PLL Lock and unlock conditions</h3>
+        <p>A PLL can lose lock if the VCO tuning range is insufficient, the loop filter is wrong, or the reference is noisy or missing. An unlocked PLL produces a dramatically degraded or absent carrier. On the spectrum analyser, an unlocked PLL looks like the carrier has moved or is missing entirely — you'll see noise where the carrier should be, or the carrier at the wrong frequency. This is easy to diagnose: compare the actual frequency to the expected channel centre frequency.</p>
+
+        <h3>Fractional-N PLLs and spurs</h3>
+        <p>Modern Wi-Fi PLLs use <strong>fractional-N</strong> division to achieve fine frequency resolution without a very high reference frequency. The divider switches between integer values, averaging to a fraction. This introduces <strong>fractional spurs</strong> — discrete spectral lines near the carrier at offsets related to the fractional divide value. These appear as sharp spikes near the carrier and must be characterised. You'll see them in the Wi-Fi chipset's characterisation data as "spur at carrier ±X kHz".</p>
+
+      </div>
+      <div class="takeaways">
+        <h4>// LESSON 2 TAKEAWAYS</h4>
+        <ul>
+          <li>Crystal oscillator is the frequency reference — accuracy measured in ppm, must be within ±20 ppm for Wi-Fi.</li>
+          <li>PLL multiplies the crystal to 2.4/5 GHz. Multiplication also multiplies noise by 20·log(N) dB.</li>
+          <li>PLL phase noise shows as skirts around the carrier on the spectrum analyser.</li>
+          <li>Fractional-N PLLs introduce fractional spurs — discrete lines near the carrier.</li>
+          <li>Bad frequency accuracy → check crystal first. Phase noise / skirts → look at PLL.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- LESSON 3 — MIXER & IQ -->
+    <div class="lesson-panel" id="l3">
+      <div class="prose">
+        <h2>The Mixer — frequency translation</h2>
+        <p>A mixer is a multiplier. It takes two signals and outputs their sum and difference frequencies. On the Tx side: the baseband signal (near 0 Hz) mixes with the LO (2.4 GHz or 5 GHz) to produce an RF signal centred on the LO frequency. On the Rx side: the RF signal mixes with the LO to produce the baseband signal near 0 Hz.</p>
+
+        <div class="formula">
+          <span class="formula-label">Mixer Output Frequencies</span>
+          f_out = f_LO ± f_baseband
+        </div>
+
+        <p>For a Wi-Fi transmitter: LO = 2.437 GHz (channel 6), baseband = ±10 MHz (for a 20 MHz channel). Output = 2.427–2.447 GHz. The mixer translates the entire baseband spectrum up to RF.</p>
+
+        <h3>Direct-conversion (zero-IF) architecture</h3>
+        <p>Most modern Wi-Fi chipsets use <strong>direct-conversion</strong> (also called zero-IF or homodyne). The LO is at exactly the carrier frequency, and the mixer converts directly between RF and baseband. This eliminates the image rejection filter needed in older superheterodyne designs.</p>
+
+        <p>Direct conversion has a critical challenge: <strong>LO leakage</strong>. Because the LO is at the carrier frequency, any LO signal leaking to the output appears as a large spike exactly at the carrier — an in-band DC offset that corrupts the signal. This is measured as <strong>carrier leakage</strong> in EVM and is a common failure mode in Wi-Fi chipsets.</p>
+
+        <h3>IQ modulation — why two signals?</h3>
+        <p>Wi-Fi uses <strong>quadrature modulation</strong>. The baseband signal is split into two components: <strong>I (In-phase)</strong> and <strong>Q (Quadrature)</strong>, which are 90° apart. By independently modulating I and Q, you can encode both amplitude and phase information simultaneously — this is what allows QAM (64-QAM, 256-QAM, 1024-QAM) to work.</p>
+
+        <p>The mixer has two inputs (I and Q) and two LOs (0° and 90°). Any mismatch between the I and Q paths — in amplitude or phase — is called <strong>IQ imbalance</strong>. It's one of the most common causes of elevated EVM in Wi-Fi chipsets.</p>
+
+        <div class="callout callout-bench">
+          <span class="callout-label callout-label-bench">// BENCH SIGNATURE — IQ IMBALANCE</span>
+          <p>IQ imbalance shows up on a vector signal analyser as a constellation that's not perfectly symmetric — the dots are smeared or rotated differently on the I axis vs the Q axis. On the spectrum, IQ imbalance creates an <strong>image sideband</strong> — a mirror of the signal spectrum at the opposite side of the carrier. If your signal is 10 MHz above the carrier, the IQ image appears 10 MHz below the carrier. The image rejection ratio tells you how well-balanced your IQ paths are. Typical Wi-Fi chipsets achieve 35–45 dB of image rejection.</p>
+        </div>
+
+        <h3>Common mixer problems and their signatures</h3>
+        <table class="data-table">
+          <thead><tr><th>Problem</th><th>Symptom on bench</th><th>Where to look</th></tr></thead>
+          <tbody>
+            <tr><td>LO leakage</td><td class="mono">Spike at carrier frequency. High carrier leakage in EVM report.</td><td>DC offset in I/Q path, LO isolation</td></tr>
+            <tr><td>IQ gain imbalance</td><td class="mono">Image sideband. Asymmetric constellation.</td><td>I vs Q path gain matching</td></tr>
+            <tr><td>IQ phase imbalance</td><td class="mono">Image sideband. Rotated constellation.</td><td>LO quadrature accuracy (90° split)</td></tr>
+            <tr><td>Mixer compression</td><td class="mono">EVM degrades at high input power on Rx.</td><td>Rx signal level vs mixer IP1dB</td></tr>
+          </tbody>
+        </table>
+
+      </div>
+      <div class="takeaways">
+        <h4>// LESSON 3 TAKEAWAYS</h4>
+        <ul>
+          <li>Mixer translates frequency: RF = LO ± baseband (Tx), baseband = RF ± LO (Rx).</li>
+          <li>Direct-conversion (zero-IF) architecture is standard in Wi-Fi — LO at carrier frequency.</li>
+          <li>LO leakage creates a carrier spike — visible as high carrier leakage in EVM measurement.</li>
+          <li>IQ imbalance creates an image sideband and degrades EVM — amplitude or phase mismatch between I and Q paths.</li>
+          <li>Image rejection ratio = how well the IQ paths are balanced. Target: >35 dB for Wi-Fi.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- LESSON 4 — PA, LNA & PGA -->
+    <div class="lesson-panel" id="l4">
+      <div class="prose">
+        <h2>PA — Power Amplifier</h2>
+        <p>The PA is the last active stage in the transmit chain. Its job: take a small-amplitude RF signal and amplify it to the required transmit power — typically +15 to +23 dBm for a Wi-Fi module. It sounds simple, but the PA is the most characterisation-intensive block in the entire chipset for two reasons: <strong>nonlinearity</strong> and <strong>efficiency</strong>.</p>
+
+        <h3>PA nonlinearity and EVM</h3>
+        <p>A perfect amplifier multiplies its input by a constant gain factor at all power levels. A real PA becomes <strong>nonlinear</strong> at high drive levels — the gain starts to compress, and the output is no longer a clean amplified copy of the input. This compression creates two problems:</p>
+        <p><strong>AM-AM distortion</strong>: the amplitude of the output is compressed relative to the input. <strong>AM-PM distortion</strong>: the phase of the output shifts with power level. Both corrupt the OFDM signal and degrade EVM.</p>
+
+        <p>The <strong>P1dB (1 dB compression point)</strong> is the standard metric for where compression begins. It's the output power at which the gain has dropped 1 dB below its small-signal value. For Wi-Fi chipsets, the PA typically operates 3–6 dB below P1dB in normal operation — this "back-off" is the price of linearity.</p>
+
+        <div class="callout callout-bench">
+          <span class="callout-label callout-label-bench">// BENCH MEASUREMENT — PA COMPRESSION</span>
+          <p>On the bench, you sweep the Tx output power from low to high and plot EVM vs output power. At low power: EVM is flat and good (limited by phase noise, IQ imbalance, etc.). As power increases: EVM stays flat for a while, then starts degrading. The power at which EVM starts degrading marks the onset of PA compression. This is the <strong>maximum linear output power</strong> — the highest power at which you can maintain your EVM spec. Exceeding it means your spectral mask will also fail (PA compression generates spectral regrowth that violates the mask).</p>
+        </div>
+
+        <h3>LNA — Low Noise Amplifier</h3>
+        <p>The LNA is the first active stage in the receive chain. It faces a completely different design constraint from the PA: instead of maximising power output, it must amplify a very weak signal (potentially −90 dBm) while adding as <strong>little noise as possible</strong>.</p>
+
+        <p>The LNA's noise figure dominates the entire receiver's noise figure, because of the Friis cascaded noise formula. If the LNA has NF = 3 dB and gain = 20 dB, the next stage's noise figure contribution is divided by 100 (the LNA's power gain). The LNA is therefore the most noise-critical component in the receive path.</p>
+
+        <p>The LNA also has a maximum input level — its <strong>compression point</strong>. A very strong nearby signal (a blocker) can drive the LNA into compression, even though the desired signal is weak. This is why <strong>blocking performance</strong> is a key receiver specification.</p>
+
+        <h3>PGA — Programmable Gain Amplifier</h3>
+        <p>The PGA appears in both the Tx and Rx paths. On Tx, it sets the output power level — the digital baseband commands a specific gain setting, which translates to a specific output power. This is how the chipset implements the power control required by 802.11 (transmit power must be adjustable over a wide range, typically 0 to +20 dBm).</p>
+
+        <p>On Rx, the PGA is part of the <strong>AGC (Automatic Gain Control)</strong> loop. When a strong signal arrives, the AGC reduces PGA gain to prevent ADC clipping. When a weak signal arrives, it increases gain. The PGA gain setting is also used to calculate <strong>RSSI (Received Signal Strength Indicator)</strong> — so PGA accuracy directly affects RSSI accuracy.</p>
+
+        <div class="callout callout-warn">
+          <span class="callout-label callout-label-warn">// GOTCHA — PGA GAIN STEP ACCURACY</span>
+          <p>PGA gain steps are not perfectly accurate. A commanded gain change of 3 dB might actually be 2.8 or 3.3 dB. This gain step error accumulates across the full gain range and directly appears as RSSI error. When characterising RSSI accuracy, you must sweep across the full dynamic range of the AGC and measure the actual power at the RF port versus the RSSI reported by the chipset. Non-linearity in the RSSI curve is almost always rooted in PGA gain step inaccuracy.</p>
+        </div>
+
+      </div>
+      <div class="takeaways">
+        <h4>// LESSON 4 TAKEAWAYS</h4>
+        <ul>
+          <li>PA: amplifies Tx signal to final power. P1dB marks compression onset — operate 3–6 dB below it for linearity.</li>
+          <li>PA compression causes EVM degradation and spectral regrowth (spectral mask failure).</li>
+          <li>LNA: first Rx stage — its noise figure dominates the entire receiver NF via Friis formula.</li>
+          <li>LNA compression from strong blockers degrades sensitivity — this is blocking performance.</li>
+          <li>PGA: Tx power control + Rx AGC. Gain step accuracy directly affects RSSI accuracy.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- LESSON 5 — DAC, ADC & QUIZ -->
+    <div class="lesson-panel" id="l5">
+      <div class="prose">
+        <h2>DAC and ADC — the digital-analogue boundary</h2>
+        <p>The DAC (Digital-to-Analogue Converter) sits at the Tx side of the baseband-to-RF boundary. It takes the digital IQ samples from the baseband processor and converts them to analogue voltage waveforms. The ADC (Analogue-to-Digital Converter) does the reverse on the Rx side.</p>
+
+        <h3>DAC resolution and Tx noise floor</h3>
+        <p>A DAC with N bits can represent 2^N distinct voltage levels. The quantisation error — the difference between the ideal analogue value and the nearest representable level — creates <strong>quantisation noise</strong>. This noise has a floor of approximately −6N dBc below the full-scale signal. A 10-bit DAC: floor ≈ −60 dBc. A 12-bit DAC: floor ≈ −72 dBc.</p>
+        <p>This quantisation noise appears in the transmitted spectrum as a broadband noise floor. It limits how clean your transmitted signal can be — it's a fundamental limit set by the DAC resolution. For 802.11ax at high MCS (1024-QAM), you need very good EVM (≤−35 dB), which demands high DAC resolution.</p>
+
+        <h3>ADC clipping — the Rx dynamic range limit</h3>
+        <p>The ADC has a maximum input voltage — its <strong>full-scale range</strong>. Any signal exceeding this clips. Clipping causes catastrophic EVM degradation — the constellation points get truncated and EVM becomes terrible. The AGC loop (via the PGA) prevents clipping by reducing gain before strong signals reach the ADC. If the AGC reacts too slowly or the PGA range is insufficient, you'll see ADC clipping, which looks like severely degraded EVM on strong signals.</p>
+
+        <div class="callout callout-bench">
+          <span class="callout-label callout-label-bench">// BENCH DIAGNOSTIC — DAC vs PA as EVM root cause</span>
+          <p>If EVM is bad at low Tx power (where the PA is not compressing), the problem is upstream of the PA — possibly DAC quantisation noise, IQ imbalance, or phase noise. If EVM is only bad at high Tx power, the PA is compressing. Sweep EVM vs output power. The transition point tells you where the problem is. This is one of the most fundamental diagnostic techniques you'll use.</p>
+        </div>
+
+        <h3>The diagnostic map — block to symptom</h3>
+        <p>Here is the map you should internalise. When you see a symptom, use this to narrow down the suspect block:</p>
+      </div>
+
+      <table class="data-table">
+        <thead><tr><th>Symptom</th><th>Suspect block(s)</th><th>How to confirm</th></tr></thead>
+        <tbody>
+          <tr><td>EVM bad at all power levels</td><td class="mono">Phase noise (PLL), IQ imbalance (Mixer), DAC noise</td><td>Check EVM vs power — if flat, it's not PA</td></tr>
+          <tr><td>EVM degrades only at high Tx power</td><td class="mono">PA compression</td><td>EVM vs output power sweep — degradation above P1dB back-off</td></tr>
+          <tr><td>Carrier spike / LO leakage</td><td class="mono">Mixer LO leakage, DC offset in IQ path</td><td>Carrier leakage metric in EVM report</td></tr>
+          <tr><td>Image sideband in spectrum</td><td class="mono">IQ imbalance (Mixer)</td><td>Image rejection measurement</td></tr>
+          <tr><td>Spectral mask failure</td><td class="mono">PA compression, DAC non-linearity</td><td>Reduce power — if mask recovers, PA is cause</td></tr>
+          <tr><td>Poor sensitivity (Rx)</td><td class="mono">LNA noise figure, PGA gain error, ADC noise</td><td>Noise figure measurement of Rx chain</td></tr>
+          <tr><td>Poor blocking performance</td><td class="mono">LNA compression, filter selectivity</td><td>Blocker sweep test</td></tr>
+          <tr><td>RSSI inaccuracy</td><td class="mono">PGA gain step error, ADC non-linearity</td><td>RSSI vs injected power sweep</td></tr>
+          <tr><td>Wrong Tx frequency</td><td class="mono">Crystal frequency error, PLL unlock</td><td>Measure carrier frequency vs expected channel</td></tr>
+          <tr><td>Phase noise / skirts on carrier</td><td class="mono">PLL noise, VCO phase noise, crystal noise</td><td>Phase noise measurement at various offsets</td></tr>
+        </tbody>
+      </table>
+
+      <div class="prose" style="margin-top: 2rem;">
+        <h2>Module 2 Quiz</h2>
+      </div>
+
+      <div class="quiz-card">
+        <div class="quiz-q"><span class="qnum">Q1.</span> EVM is measured at −28 dB at low output power and stays flat as power increases up to +15 dBm, then rapidly degrades above +17 dBm. What is the most likely root cause?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="ans(this,false)">A. IQ imbalance from the mixer</button>
+          <button class="quiz-opt" onclick="ans(this,false)">B. Phase noise from the PLL</button>
+          <button class="quiz-opt" onclick="ans(this,true)">C. PA compression above its linear operating region</button>
+          <button class="quiz-opt" onclick="ans(this,false)">D. Crystal frequency error</button>
+        </div>
+        <div class="quiz-exp"><strong>PA compression.</strong> The flat EVM at low power means the PA, IQ paths, and phase noise are all fine at low levels. The degradation starting at +17 dBm marks the onset of PA AM-AM and AM-PM distortion. The fix is to reduce maximum Tx power or improve PA linearity (better back-off or a more linear PA design).</div>
+      </div>
+
+      <div class="quiz-card">
+        <div class="quiz-q"><span class="qnum">Q2.</span> You see a discrete spike on the spectrum analyser located 40 kHz away from the transmit carrier. What block is the most likely source?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="ans(this,false)">A. PA harmonic distortion</button>
+          <button class="quiz-opt" onclick="ans(this,true)">B. PLL fractional spur</button>
+          <button class="quiz-opt" onclick="ans(this,false)">C. ADC quantisation noise</button>
+          <button class="quiz-opt" onclick="ans(this,false)">D. LO leakage from the mixer</button>
+        </div>
+        <div class="quiz-exp"><strong>PLL fractional spur.</strong> A discrete spike close to the carrier (not at a harmonic multiple) is the classic signature of a fractional-N PLL spur. PA harmonics appear at 2f, 3f etc. — far away. LO leakage appears exactly at the carrier (0 Hz offset). ADC quantisation noise is broadband, not a discrete spike. Fractional spurs appear at offsets related to the fractional divide value — often tens to hundreds of kHz from the carrier.</div>
+      </div>
+
+      <div class="quiz-card">
+        <div class="quiz-q"><span class="qnum">Q3.</span> Your receiver sensitivity is worse than expected. You measure the LNA noise figure and it's good. What should you check next?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="ans(this,false)">A. PA output power</button>
+          <button class="quiz-opt" onclick="ans(this,true)">B. PGA gain accuracy and cascaded noise figure of the full Rx chain</button>
+          <button class="quiz-opt" onclick="ans(this,false)">C. Crystal frequency accuracy</button>
+          <button class="quiz-opt" onclick="ans(this,false)">D. DAC resolution</button>
+        </div>
+        <div class="quiz-exp"><strong>Cascaded noise figure of the full Rx chain.</strong> The LNA dominates, but if the LNA gain is lower than expected, the next stage (PGA, mixer) contributes more noise via the Friis formula. Also check: insertion loss between antenna port and LNA input (PCB traces, switches, filters — all add loss before the LNA, directly degrading sensitivity). The full chain NF = LNA_NF + (next stage NF − 1) / LNA_gain. Each element must be measured.</div>
+      </div>
+
+      <div style="margin-top:2rem; display:flex; gap:1rem;">
+        <a href="m3-instruments.html" style="font-family:var(--mono); font-size:0.72rem; color:var(--accent); border:1px solid var(--border); padding:0.7rem 1.5rem; text-decoration:none; transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(232,255,71,0.5)'" onmouseout="this.style.borderColor='var(--border)'">Continue to Module 3 →</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <span class="footer-brand">RF/COURSE</span>
+  <span class="footer-note">// Module 02 — Inside the Wi-Fi Chip</span>
+</footer>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.lesson-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.lesson-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  const pct = {'l1':20,'l2':40,'l3':60,'l4':80,'l5':100}[id] || 0;
+  document.getElementById('progress').style.width = pct + '%';
+  window.scrollTo({top: document.getElementById('lesson-nav').offsetTop - 60, behavior:'smooth'});
+}
+function ans(btn, correct) {
+  const card = btn.closest('.quiz-card');
+  if (card.dataset.done) return;
+  card.dataset.done = '1';
+  card.querySelectorAll('.quiz-opt').forEach(o => o.disabled = true);
+  if (correct) btn.classList.add('correct');
+  else {
+    btn.classList.add('wrong');
+    card.querySelectorAll('.quiz-opt').forEach(o => { if(o.onclick.toString().includes('true')) o.classList.add('correct'); });
+  }
+  card.querySelector('.quiz-exp').classList.add('show');
+}
+</script>
+</body>
+</html>
